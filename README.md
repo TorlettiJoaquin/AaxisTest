@@ -13,7 +13,7 @@ What things you need to install the software and how to install them:
 - PHP (version 8.0 or higher)
 - Symfony (version 7)
 - Composer
-- PostgreSQL
+- PostgreSQL (version 16)
 
 ### Installing
 
@@ -32,10 +32,22 @@ Install dependencies using Composer:
 composer install
 ```
 
-The development variables are in the .env file, adjust the database connections and change the API_TOKEN if necessary.
+After installing dependencies, you need to configure the database connection. The project is configured to use PostgreSQL. Update the `DATABASE_URL` in the `.env` file with your PostgreSQL credentials. For example:
+
+```env
+# .env
+# ...
+# Configure your db connection here
+DATABASE_URL="postgresql://db_user:db_password@localhost:5432/aaxistest?serverVersion=16&charset=utf8"
+```
+
+Make sure that PostgreSQL is running and create the database:
+```bash
+php bin/console doctrine:database:create
+```
 
 
-Run the database migrations:
+Run the database migrations to set up the required tables:
 
 ```bash
 php bin/console doctrine:migrations:migrate
