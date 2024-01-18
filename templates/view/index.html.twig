@@ -1,0 +1,204 @@
+{# templates/view/index.html.twig #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            overflow: hidden;
+            padding: 0 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        input[type="text"], input[type="submit"], button {
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            cursor: pointer;
+            background: #333;
+            color: white;
+            border: none;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #product-list div {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Product List</h1>
+        <div id="product-list"></div>
+
+        <!-- Form to Add a Product -->
+        <h2>Add Product</h2>
+        <form id="addProductForm">
+            SKU: <input type="text" id="addSku" required><br>
+            Name: <input type="text" id="addProductName" required><br>
+            Description: <input type="text" id="addDescription"><br>
+            <button type="submit">Add Product</button>
+        </form>
+
+        <!-- Form to Update a Product -->
+        <h2>Update Product</h2>
+        <form id="updateProductForm">
+            Existing SKU: <input type="text" id="updateSku" required><br>
+            New Name: <input type="text" id="updateProductName"><br>
+            New Description: <input type="text" id="updateDescription"><br>
+            <button type="submit">Update Product</button>
+        </form>
+
+        <!-- Form to Delete a Product -->
+        <h2>Delete Product</h2>
+        <form id="deleteProductForm">
+            SKU (to delete): <input type="text" id="deleteSku" required><br>
+            <button type="submit">Delete Product</button>
+        </form>
+
+        <div id="product-list"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchProducts();
+        });
+
+        document.getElementById('addProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            addProduct();
+        });
+
+        document.getElementById('updateProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            updateProduct();
+        });
+
+        document.getElementById('deleteProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            deleteProduct();
+        });
+
+        function fetchProducts() {
+            fetch('{{ path('list_products') }}', {
+                method: 'GET',
+                headers: {
+                    'X-AUTH-TOKEN': 'testtoken123456789'
+                }
+            })
+            .then(response => response.json())
+            .then(data => displayProducts(data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        function addProduct() {
+            const sku = document.getElementById('addSku').value;
+            const productName = document.getElementById('addProductName').value;
+            const description = document.getElementById('addDescription').value;
+
+            fetch('{{ path('add_products') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-AUTH-TOKEN': 'testtoken123456789'
+                },
+                body: JSON.stringify([{ sku, product_name: productName, description }])
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Producto añadido con éxito');
+                fetchProducts();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function updateProduct() {
+            const sku = document.getElementById('updateSku').value;
+            const productName = document.getElementById('updateProductName').value;
+            const description = document.getElementById('updateDescription').value;
+
+            fetch('{{ path('update_products') }}', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-AUTH-TOKEN': 'testtoken123456789'
+                },
+                body: JSON.stringify([{ sku, product_name: productName, description }])
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Producto actualizado con éxito');
+                fetchProducts();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteProduct() {
+            const sku = document.getElementById('deleteSku').value;
+
+            fetch('{{ path('delete_products') }}', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-AUTH-TOKEN': 'testtoken123456789'
+                },
+                body: JSON.stringify([{ sku }])
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Producto eliminado con éxito');
+                fetchProducts();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayProducts(products) {
+            const list = document.getElementById('product-list');
+            list.innerHTML = '';
+
+            products.forEach(product => {
+                const item = document.createElement('div');
+                item.innerHTML = `
+                    <h2>${product.product_name}</h2>
+                    <h4>Sku: ${product.sku}</h4>
+                    <p>Description: ${product.description}</p>
+                    <small>Created at: ${product.created_at}</small>
+                    <small>updated at: ${product.updated_at || 'No updated'}</small>
+                `;
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
