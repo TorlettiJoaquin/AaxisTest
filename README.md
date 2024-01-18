@@ -82,10 +82,6 @@ You can interact with the API using tools like cURL or Postman. Here are the ava
 
 - Axel Joaquin Torletti
 
-### License
-
-This project is licensed under the MIT License.
-
 ### Acknowledgments
 
 Thanks to AAXIS for considering me for this position.
