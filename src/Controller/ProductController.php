@@ -8,12 +8,24 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Product;
+use App\Service\ApiTokenService;
 
 class ProductController extends AbstractController
 {
-    #[Route('/api/products', name: 'list_products', methods: ['GET'])]
-    public function listProducts(EntityManagerInterface $entityManager): JsonResponse
+    private ApiTokenService $apiTokenService;
+
+    public function __construct(ApiTokenService $apiTokenService)
     {
+        $this->apiTokenService = $apiTokenService;
+    }
+
+    #[Route('/api/products', name: 'list_products', methods: ['GET'])]
+    public function listProducts(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (!$this->isTokenValid($request)) {
+            return $this->json(['error' => 'Invalid or missing token'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
         $products = $entityManager->getRepository(Product::class)->findAll();
 
         $productArray  = [];
@@ -35,6 +47,10 @@ class ProductController extends AbstractController
     #[Route('/api/products', name: 'add_products', methods: ['POST'])]
     public function addProducts(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        if (!$this->isTokenValid($request)) {
+            return $this->json(['error' => 'Invalid or missing token'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
         $content = json_decode($request->getContent(), true);
 
         if (is_null($content)) {
@@ -58,6 +74,10 @@ class ProductController extends AbstractController
     #[Route('/api/products', name: 'update_products', methods: ['PUT'])]
     public function updateProducts(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        if (!$this->isTokenValid($request)) {
+            return $this->json(['error' => 'Invalid or missing token'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
         $content = json_decode($request->getContent(), true);
 
         if (is_null($content)) {
@@ -93,6 +113,10 @@ class ProductController extends AbstractController
     #[Route('/api/products', name: 'delete_products', methods: ['DELETE'])]
     public function deleteProducts(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        if (!$this->isTokenValid($request)) {
+            return $this->json(['error' => 'Invalid or missing token'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
         $content = json_decode($request->getContent(), true);
 
         if (is_null($content)) {
@@ -122,5 +146,11 @@ class ProductController extends AbstractController
         $entityManager->flush();
 
         return $this->json($response);
+    }
+
+    private function isTokenValid(Request $request): bool
+    {
+        $token = $request->headers->get('X-AUTH-TOKEN');
+        return $this->apiTokenService->isTokenValid($token);
     }
 }
